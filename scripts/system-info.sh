@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # Script de récupération des informations système
-# Compatible : Linux, macOS
+# Optimisé pour Debian/Linux, compatible macOS
 # Usage: ./system-info.sh [--json|--csv]
 #
 
@@ -13,6 +13,19 @@ readonly GREEN='\033[0;32m'
 readonly YELLOW='\033[1;33m'
 readonly BLUE='\033[0;34m'
 readonly NC='\033[0m' # No Color
+
+# Variables globales
+CPU_MODEL=""
+CPU_PHYSICAL_CORES=0
+CPU_THREADS=0
+MEM_TOTAL_GB=0
+MEM_TOTAL_MB=0
+MEM_AVAILABLE_GB=0
+MEM_USED_GB=0
+STORAGE_NVME_GB=0
+STORAGE_SSD_GB=0
+STORAGE_HDD_GB=0
+STORAGE_TOTAL_GB=0
 
 # Détection de l'OS
 detect_os() {
@@ -37,7 +50,7 @@ print_info() {
 }
 
 print_error() {
-    echo -e "${RED}✗${NC} $1"
+    echo -e "${RED}✗${NC} $1" >&2
 }
 
 # =============================================================================
@@ -50,20 +63,39 @@ get_cpu_info() {
     if [[ "$OS" == "Linux" ]]; then
         # Linux - utilise lscpu et /proc/cpuinfo
         if command -v lscpu &> /dev/null; then
-            cpu_model=$(lscpu | grep "Model name" | cut -d':' -f2 | xargs)
-            physical_cores=$(lscpu | grep "^Core(s) per socket:" | awk '{print $4}')
-            sockets=$(lscpu | grep "^Socket(s):" | awk '{print $2}')
-            threads_per_core=$(lscpu | grep "^Thread(s) per core:" | awk '{print $4}')
+            cpu_model=$(lscpu | grep -i "Model name" | cut -d':' -f2 | sed 's/^[ \t]*//')
+
+            # Gestion des cas où certaines valeurs peuvent être absentes
+            physical_cores=$(lscpu | grep -i "^Core(s) per socket:" | awk '{print $NF}')
+            sockets=$(lscpu | grep -i "^Socket(s):" | awk '{print $NF}')
+            threads_per_core=$(lscpu | grep -i "^Thread(s) per core:" | awk '{print $NF}')
+
+            # Valeurs par défaut si vides
+            physical_cores=${physical_cores:-1}
+            sockets=${sockets:-1}
+            threads_per_core=${threads_per_core:-1}
 
             total_physical_cores=$((physical_cores * sockets))
             total_threads=$((total_physical_cores * threads_per_core))
         else
             # Fallback avec /proc/cpuinfo
-            cpu_model=$(grep "model name" /proc/cpuinfo | head -1 | cut -d':' -f2 | xargs)
+            cpu_model=$(grep -m1 "model name" /proc/cpuinfo | cut -d':' -f2 | sed 's/^[ \t]*//')
             total_threads=$(grep -c "^processor" /proc/cpuinfo)
-            physical_cores=$(grep "^cpu cores" /proc/cpuinfo | head -1 | awk '{print $4}')
+
+            # Essayer de déterminer les cœurs physiques
+            physical_cores=$(grep -m1 "cpu cores" /proc/cpuinfo | awk '{print $NF}')
+            if [[ -z "$physical_cores" ]]; then
+                # Si pas de "cpu cores", compter les physical id uniques
+                physical_cores=$(grep "physical id" /proc/cpuinfo | sort -u | wc -l)
+                if [[ $physical_cores -eq 0 ]]; then
+                    physical_cores=1
+                fi
+            fi
             total_physical_cores=$physical_cores
         fi
+
+        # Valeur par défaut pour cpu_model si vide
+        cpu_model=${cpu_model:-"Unknown CPU"}
 
         print_info "Modèle CPU" "$cpu_model"
         print_info "Cœurs physiques" "$total_physical_cores"
@@ -76,9 +108,9 @@ get_cpu_info() {
 
     elif [[ "$OS" == "macOS" ]]; then
         # macOS - utilise sysctl
-        cpu_model=$(sysctl -n machdep.cpu.brand_string)
-        physical_cores=$(sysctl -n hw.physicalcpu)
-        logical_cores=$(sysctl -n hw.logicalcpu)
+        cpu_model=$(sysctl -n machdep.cpu.brand_string 2>/dev/null || echo "Unknown CPU")
+        physical_cores=$(sysctl -n hw.physicalcpu 2>/dev/null || echo "1")
+        logical_cores=$(sysctl -n hw.logicalcpu 2>/dev/null || echo "1")
 
         print_info "Modèle CPU" "$cpu_model"
         print_info "Cœurs physiques" "$physical_cores"
@@ -100,16 +132,21 @@ get_memory_info() {
 
     if [[ "$OS" == "Linux" ]]; then
         # Linux - lecture de /proc/meminfo
-        total_kb=$(grep MemTotal /proc/meminfo | awk '{print $2}')
+        total_kb=$(grep "MemTotal" /proc/meminfo | awk '{print $2}')
         total_mb=$((total_kb / 1024))
-        total_gb=$(awk "BEGIN {printf \"%.2f\", $total_mb/1024}")
+        total_gb=$(printf "%.2f" "$(echo "scale=2; $total_mb/1024" | bc)")
 
-        available_kb=$(grep MemAvailable /proc/meminfo | awk '{print $2}')
+        # MemAvailable n'existe pas sur tous les noyaux, fallback sur MemFree
+        if grep -q "MemAvailable" /proc/meminfo; then
+            available_kb=$(grep "MemAvailable" /proc/meminfo | awk '{print $2}')
+        else
+            available_kb=$(grep "MemFree" /proc/meminfo | awk '{print $2}')
+        fi
         available_mb=$((available_kb / 1024))
-        available_gb=$(awk "BEGIN {printf \"%.2f\", $available_mb/1024}")
+        available_gb=$(printf "%.2f" "$(echo "scale=2; $available_mb/1024" | bc)")
 
         used_mb=$((total_mb - available_mb))
-        used_gb=$(awk "BEGIN {printf \"%.2f\", $used_mb/1024}")
+        used_gb=$(printf "%.2f" "$(echo "scale=2; $used_mb/1024" | bc)")
 
         print_info "Mémoire totale" "${total_gb} Go (${total_mb} Mo)"
         print_info "Mémoire disponible" "${available_gb} Go (${available_mb} Mo)"
@@ -125,22 +162,21 @@ get_memory_info() {
         # macOS - utilise sysctl et vm_stat
         total_bytes=$(sysctl -n hw.memsize)
         total_mb=$((total_bytes / 1024 / 1024))
-        total_gb=$(awk "BEGIN {printf \"%.2f\", $total_mb/1024}")
+        total_gb=$(printf "%.2f" "$(echo "scale=2; $total_mb/1024" | bc)")
 
         # vm_stat pour mémoire utilisée/disponible
-        page_size=$(sysctl -n hw.pagesize)
-        vm_stat_output=$(vm_stat)
+        page_size=$(sysctl -n hw.pagesize || echo "4096")
 
-        pages_free=$(echo "$vm_stat_output" | grep "Pages free" | awk '{print $3}' | tr -d '.')
-        pages_active=$(echo "$vm_stat_output" | grep "Pages active" | awk '{print $3}' | tr -d '.')
-        pages_inactive=$(echo "$vm_stat_output" | grep "Pages inactive" | awk '{print $3}' | tr -d '.')
-        pages_wired=$(echo "$vm_stat_output" | grep "Pages wired down" | awk '{print $4}' | tr -d '.')
+        pages_free=$(vm_stat | grep "Pages free" | awk '{print $3}' | tr -d '.')
+        pages_active=$(vm_stat | grep "Pages active" | awk '{print $3}' | tr -d '.')
+        pages_inactive=$(vm_stat | grep "Pages inactive" | awk '{print $3}' | tr -d '.')
+        pages_wired=$(vm_stat | grep "Pages wired down" | awk '{print $4}' | tr -d '.')
 
         free_mb=$(((pages_free * page_size) / 1024 / 1024))
         used_mb=$(((pages_active + pages_inactive + pages_wired) * page_size / 1024 / 1024))
 
-        free_gb=$(awk "BEGIN {printf \"%.2f\", $free_mb/1024}")
-        used_gb=$(awk "BEGIN {printf \"%.2f\", $used_mb/1024}")
+        free_gb=$(printf "%.2f" "$(echo "scale=2; $free_mb/1024" | bc)")
+        used_gb=$(printf "%.2f" "$(echo "scale=2; $used_mb/1024" | bc)")
 
         print_info "Mémoire totale" "${total_gb} Go (${total_mb} Mo)"
         print_info "Mémoire disponible" "${free_gb} Go (${free_mb} Mo)"
@@ -158,59 +194,84 @@ get_memory_info() {
 # INFORMATIONS STOCKAGE
 # =============================================================================
 
+# Fonction pour convertir taille humaine en Go
+convert_to_gb() {
+    local size="$1"
+    local value unit
+
+    # Extraire valeur et unité
+    value=$(echo "$size" | grep -oE '[0-9.]+')
+    unit=$(echo "$size" | grep -oE '[A-Z]+')
+
+    case "$unit" in
+        K|KB)   echo "$(echo "scale=2; $value / 1024 / 1024" | bc)" ;;
+        M|MB)   echo "$(echo "scale=2; $value / 1024" | bc)" ;;
+        G|GB)   echo "$(echo "scale=2; $value" | bc)" ;;
+        T|TB)   echo "$(echo "scale=2; $value * 1024" | bc)" ;;
+        P|PB)   echo "$(echo "scale=2; $value * 1024 * 1024" | bc)" ;;
+        *)      echo "0" ;;
+    esac
+}
+
 get_storage_info() {
     print_header "INFORMATIONS STOCKAGE"
 
     if [[ "$OS" == "Linux" ]]; then
-        # Linux - utilise lsblk pour déterminer le type de disque
-
-        # Vérifier si lsblk est disponible
-        if ! command -v lsblk &> /dev/null; then
-            print_error "lsblk n'est pas disponible"
-            return 1
-        fi
-
         echo -e "\n${YELLOW}Disques détectés :${NC}\n"
 
         # Variables pour agrégation
-        total_ssd_gb=0
-        total_hdd_gb=0
-        total_nvme_gb=0
+        local total_ssd_gb=0
+        local total_hdd_gb=0
+        local total_nvme_gb=0
 
-        # Lister tous les disques (pas les partitions)
-        while IFS= read -r line; do
-            device=$(echo "$line" | awk '{print $1}')
-            size=$(echo "$line" | awk '{print $4}')
-            type=$(echo "$line" | awk '{print $6}')
+        # Vérifier si lsblk est disponible
+        if command -v lsblk &> /dev/null; then
+            # Lister tous les disques (pas les partitions)
+            while IFS= read -r line; do
+                device=$(echo "$line" | awk '{print $1}')
+                size=$(echo "$line" | awk '{print $2}')
 
-            # Déterminer si SSD ou HDD
-            rotational=$(cat /sys/block/"$device"/queue/rotational 2>/dev/null || echo "1")
+                # Convertir la taille en Go
+                size_gb=$(convert_to_gb "$size")
 
-            # Convertir la taille en Go
-            size_gb=$(numfmt --from=iec --to-unit=G "$size" 2>/dev/null || echo "0")
+                # Ignorer les tailles nulles ou invalides
+                if [[ $(echo "$size_gb > 0" | bc) -eq 1 ]]; then
+                    # Déterminer si SSD ou HDD
+                    rotational="1"
+                    if [[ -f "/sys/block/$device/queue/rotational" ]]; then
+                        rotational=$(cat "/sys/block/$device/queue/rotational" 2>/dev/null || echo "1")
+                    fi
 
-            # Déterminer le type
-            if [[ "$device" == nvme* ]]; then
-                disk_type="NVMe SSD"
-                total_nvme_gb=$(awk "BEGIN {print $total_nvme_gb + $size_gb}")
-            elif [[ "$rotational" == "0" ]]; then
-                disk_type="SSD"
-                total_ssd_gb=$(awk "BEGIN {print $total_ssd_gb + $size_gb}")
-            else
-                disk_type="HDD"
-                total_hdd_gb=$(awk "BEGIN {print $total_hdd_gb + $size_gb}")
-            fi
+                    # Déterminer le type
+                    if [[ "$device" == nvme* ]]; then
+                        disk_type="NVMe SSD"
+                        total_nvme_gb=$(echo "$total_nvme_gb + $size_gb" | bc)
+                    elif [[ "$rotational" == "0" ]]; then
+                        disk_type="SSD"
+                        total_ssd_gb=$(echo "$total_ssd_gb + $size_gb" | bc)
+                    else
+                        disk_type="HDD"
+                        total_hdd_gb=$(echo "$total_hdd_gb + $size_gb" | bc)
+                    fi
 
-            echo -e "  ${GREEN}•${NC} /dev/$device : $size ($disk_type)"
+                    echo -e "  ${GREEN}•${NC} /dev/$device : $size ($disk_type)"
+                fi
+            done < <(lsblk -ndo NAME,SIZE | grep -E '^(sd|nvme|vd|hd)')
+        else
+            print_error "lsblk n'est pas disponible - installation requise"
+            return 1
+        fi
 
-        done < <(lsblk -ndo NAME,SIZE,TYPE | grep disk)
+        # Arrondir les totaux
+        total_nvme_gb=$(printf "%.0f" "$total_nvme_gb")
+        total_ssd_gb=$(printf "%.0f" "$total_ssd_gb")
+        total_hdd_gb=$(printf "%.0f" "$total_hdd_gb")
+        total_storage=$(echo "$total_nvme_gb + $total_ssd_gb + $total_hdd_gb" | bc)
 
         echo ""
         print_info "Total NVMe SSD" "${total_nvme_gb} Go"
         print_info "Total SSD" "${total_ssd_gb} Go"
         print_info "Total HDD" "${total_hdd_gb} Go"
-
-        total_storage=$(awk "BEGIN {print $total_nvme_gb + $total_ssd_gb + $total_hdd_gb}")
         print_info "Capacité totale" "${total_storage} Go"
 
         # Export variables
@@ -220,12 +281,10 @@ get_storage_info() {
         STORAGE_TOTAL_GB="$total_storage"
 
     elif [[ "$OS" == "macOS" ]]; then
-        # macOS - utilise diskutil
-
         echo -e "\n${YELLOW}Disques détectés :${NC}\n"
 
-        total_ssd_gb=0
-        total_hdd_gb=0
+        local total_ssd_gb=0
+        local total_hdd_gb=0
 
         # Lister tous les disques physiques
         while IFS= read -r disk; do
@@ -234,39 +293,32 @@ get_storage_info() {
 
             disk_name=$(echo "$disk_info" | grep "Device / Media Name:" | cut -d':' -f2 | xargs)
             disk_size=$(echo "$disk_info" | grep "Disk Size:" | cut -d':' -f2 | awk '{print $1, $2}' | xargs)
-            protocol=$(echo "$disk_info" | grep "Protocol:" | cut -d':' -f2 | xargs)
             solid_state=$(echo "$disk_info" | grep "Solid State:" | cut -d':' -f2 | xargs)
 
             # Convertir taille en Go
-            size_value=$(echo "$disk_size" | awk '{print $1}')
-            size_unit=$(echo "$disk_size" | awk '{print $2}')
-
-            if [[ "$size_unit" == "TB" ]]; then
-                size_gb=$(awk "BEGIN {printf \"%.0f\", $size_value * 1024}")
-            elif [[ "$size_unit" == "GB" ]]; then
-                size_gb=$(awk "BEGIN {printf \"%.0f\", $size_value}")
-            else
-                size_gb=0
-            fi
+            size_gb=$(convert_to_gb "$disk_size")
 
             # Déterminer le type
-            if [[ "$solid_state" == "Yes" ]] || [[ "$protocol" == "PCI-Express" ]]; then
+            if [[ "$solid_state" == "Yes" ]]; then
                 disk_type="SSD"
-                total_ssd_gb=$(awk "BEGIN {print $total_ssd_gb + $size_gb}")
+                total_ssd_gb=$(echo "$total_ssd_gb + $size_gb" | bc)
             else
                 disk_type="HDD"
-                total_hdd_gb=$(awk "BEGIN {print $total_hdd_gb + $size_gb}")
+                total_hdd_gb=$(echo "$total_hdd_gb + $size_gb" | bc)
             fi
 
             echo -e "  ${GREEN}•${NC} $disk : $disk_size ($disk_type) - $disk_name"
 
         done < <(diskutil list | grep "^/dev/disk" | awk '{print $1}')
 
+        # Arrondir les totaux
+        total_ssd_gb=$(printf "%.0f" "$total_ssd_gb")
+        total_hdd_gb=$(printf "%.0f" "$total_hdd_gb")
+        total_storage=$(echo "$total_ssd_gb + $total_hdd_gb" | bc)
+
         echo ""
         print_info "Total SSD" "${total_ssd_gb} Go"
         print_info "Total HDD" "${total_hdd_gb} Go"
-
-        total_storage=$(awk "BEGIN {print $total_ssd_gb + $total_hdd_gb}")
         print_info "Capacité totale" "${total_storage} Go"
 
         # Export variables
@@ -321,6 +373,12 @@ EOF
 
 main() {
     local output_format="${1:-text}"
+
+    # Vérifier la disponibilité de bc (requis pour calculs décimaux)
+    if ! command -v bc &> /dev/null; then
+        echo "Erreur: 'bc' n'est pas installé. Installation requise : apt-get install bc" >&2
+        exit 1
+    fi
 
     if [[ "$output_format" == "--json" ]]; then
         # Mode JSON - pas d'affichage coloré, juste récupération des données
