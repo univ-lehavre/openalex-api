@@ -1,5 +1,6 @@
 # API OpenAlex - Documentation Technique
 
+[![DOI](https://zenodo.org/badge/1132817023.svg)](https://doi.org/10.5281/zenodo.18223656)
 [![Documentation](https://img.shields.io/badge/docs-Docusaurus-blue)](https://docusaurus.io)
 [![Licence](https://img.shields.io/badge/licence-MIT-green)](LICENSE)
 [![Status](https://img.shields.io/badge/status-en%20développement-yellow)]()
