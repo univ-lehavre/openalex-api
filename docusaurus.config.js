@@ -4,6 +4,7 @@
 const {themes} = require('prism-react-renderer');
 const lightCodeTheme = themes.github;
 const darkCodeTheme = themes.dracula;
+const packageJson = require('./package.json');
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
@@ -76,6 +77,11 @@ const config = {
             label: 'Documentation',
           },
           {
+            type: 'html',
+            position: 'right',
+            value: `<span style="padding: 0 1rem; color: var(--ifm-navbar-link-color); font-size: 0.9rem;">v${packageJson.version}</span>`,
+          },
+          {
             href: 'https://github.com/univ-lehavre/openalex-api',
             label: 'GitHub',
             position: 'right',
@@ -129,7 +135,7 @@ const config = {
             ],
           },
         ],
-        copyright: `Copyright © ${new Date().getFullYear()} Université Le Havre Normandie. Documentation générée avec Docusaurus.`,
+        copyright: `Copyright © ${new Date().getFullYear()} Université Le Havre Normandie · v${packageJson.version} · Documentation générée avec Docusaurus.`,
       },
       prism: {
         theme: lightCodeTheme,
