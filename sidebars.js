@@ -21,6 +21,8 @@ const sidebars = {
       items: [
         'introduction/overview',
         'introduction/architecture-decision',
+        'introduction/architecture-options',
+        'introduction/polyglot-architecture',
         'introduction/success-metrics',
       ],
     },
@@ -30,8 +32,11 @@ const sidebars = {
       collapsed: true,
       items: [
         'stockage/strategy',
+        'stockage/rook-ceph',
         // Modules à créer - décommenter quand prêts
         // 'stockage/postgresql',
+        // 'stockage/neo4j',
+        // 'stockage/influxdb',
         // 'stockage/elasticsearch',
         // 'stockage/partitioning',
         // 'stockage/backup-recovery',
@@ -140,6 +145,7 @@ const sidebars = {
       label: '📚 Annexes',
       collapsed: true,
       items: [
+        'annexes/cncf-stack',
         'annexes/technology-stack',
         'annexes/cost-estimation',
         'annexes/risk-mitigation',

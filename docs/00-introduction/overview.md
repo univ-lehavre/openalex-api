@@ -92,9 +92,13 @@ L'architecture repose sur une **approche hybride** combinant :
 ### Infrastructure Kubernetes
 
 Déploiement sur **cluster Kubernetes auto-géré** :
-- 10 nœuds workers
-- 376 cœurs CPU, 1,5 To RAM
-- 13,5 To stockage SSD
+
+- **4 nœuds workers** (dirqual1-4)
+- **160 cœurs physiques** (40 × 4), **320 threads** (80 × 4)
+- **1 To RAM** (252 Go × 4)
+- **284 To stockage** (71 To × 4)
+  - **13,6 To NVMe SSD** haute performance
+  - **270 To HDD** pour backups et archives
 - Haute disponibilité avec réplication
 
 ## Patterns de Requêtes Supportés

@@ -434,8 +434,99 @@ appendonly no   # Pas d'AOF (données volatiles)
 
 ---
 
+## Infrastructure Disponible
+
+### Cluster de 4 Serveurs (dirqual1-4)
+
+Votre infrastructure dépasse largement les besoins :
+
+| Ressource | Besoin | Disponible | Ratio |
+|-----------|--------|------------|-------|
+| **SSD Rapide (NVMe)** | 13,5 To | **13,6 To** | ✅ 1× |
+| **Stockage Total** | 13,5 To | **284 To** | ✅ 21× |
+| **HDD pour Backups** | 10 To | **270 To** | ✅ 27× |
+
+### Allocation Recommandée
+
+#### Stockage NVMe SSD (13,6 To)
+
+**Serveur dirqual1** (3,4 To NVMe) :
+
+```text
+PostgreSQL Primary : 3 To
+  ├─ Données : 2 To
+  ├─ Index : 700 Go
+  └─ WAL : 300 Go
+```
+
+**Serveur dirqual2** (3,4 To NVMe) :
+
+```text
+PostgreSQL Replica : 3 To (Phase 5)
+Staging Blue : 400 Go (temporaire)
+```
+
+**Serveur dirqual3** (3,4 To NVMe) :
+
+```text
+Elasticsearch : 2 To
+  ├─ Index primaire : 900 Go
+  ├─ Réplicas : 900 Go
+  └─ Snapshots : 200 Go
+Redis Cluster : 100 Go
+```
+
+**Serveur dirqual4** (3,4 To NVMe) :
+
+```text
+Services :
+  ├─ FastAPI (conteneurs) : 100 Go
+  ├─ Monitoring (Prometheus/Grafana) : 500 Go
+  ├─ Logs (Loki) : 200 Go
+  ├─ ETL temporaire : 500 Go
+  └─ CI/CD : 100 Go
+Réserve : 2 To
+```
+
+#### Stockage HDD (270 To)
+
+**Configuration RAID 10 recommandée** :
+
+- **Serveur dirqual1** : RAID 10 → 33 To utilisables
+  - Backups PostgreSQL quotidiens : 10 To
+  - Archives mensuelles : 20 To
+
+- **Serveur dirqual2** : RAID 10 → 33 To utilisables
+  - Backups Elasticsearch : 5 To
+  - Exports complets OpenAlex : 10 To
+  - Réserve : 18 To
+
+- **Serveur dirqual3** : RAID 10 → 33 To utilisables
+  - Logs historiques : 5 To
+  - Métriques long terme : 5 To
+  - Réserve : 23 To
+
+- **Serveur dirqual4** : RAID 10 → 33 To utilisables
+  - Disaster Recovery : 10 To
+  - Snapshots système : 5 To
+  - Réserve : 18 To
+
+**Total utilisable** : 132 To (avec RAID 10)
+
+### Capacité de Croissance
+
+Avec cette infrastructure, le cluster peut supporter :
+
+- **10× le volume actuel** (30 To de données)
+- **20 ans de backups quotidiens** sans problème
+- **Environnements multiples** (dev, staging, prod)
+- **Projets additionnels** simultanés
+
+---
+
 ## Prochaines Étapes
 
+- [Inventaire matériel détaillé](../06-kubernetes/hardware-inventory.md)
 - [Configuration PostgreSQL détaillée](./postgresql.md)
 - [Configuration Elasticsearch détaillée](./elasticsearch.md)
 - [Stratégie de partitionnement](./partitioning.md)

@@ -11,7 +11,10 @@ Documentation technique du projet d'API OpenAlex de l'Université Le Havre Norma
 Ce dépôt contient la documentation complète du projet d'infrastructure pour l'API OpenAlex :
 
 - **Architecture hybride** : PostgreSQL + Elasticsearch
-- **Infrastructure** : Kubernetes auto-géré (10 nœuds, 376 cœurs, 1,5 To RAM)
+- **Infrastructure** : Cluster Kubernetes de 4 serveurs (dirqual1-4)
+  - 160 cœurs physiques, 320 threads
+  - 1 To RAM
+  - 284 To stockage (13,6 To NVMe SSD + 270 To HDD)
 - **Volume de données** : 3 To de données bibliographiques OpenAlex
 - **Performance cible** : < 500ms P95, 100-500 req/s
 - **Implémentation** : 20 semaines (6 phases)
