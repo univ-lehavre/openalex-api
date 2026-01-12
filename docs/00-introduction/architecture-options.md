@@ -103,7 +103,7 @@ Deux systèmes complémentaires :
 
 ### Cas d'Usage Optimaux
 
-- API REST standard (GET /works/{id}, filtres simples)
+- API REST standard (GET /works/\{id\}, filtres simples)
 - Recherche plein texte basique
 - Équipe IT limitée (1-2 personnes)
 - Besoin de mise en production rapide
@@ -509,7 +509,7 @@ ORDER BY month;
 Si **Polyglotte** validé :
 1. [Architecture Polyglotte Détaillée](./polyglot-architecture.md)
 2. [Configuration Neo4j](../01-stockage/neo4j.md)
-3. [Configuration InfluxDB](../01-stockage/timescaledb.md)
+3. [Configuration InfluxDB](../01-stockage/influxdb.md)
 4. [Router FastAPI Multi-DB](../04-api/fastapi-router.md)
 
 Si **Hybride** préféré :
