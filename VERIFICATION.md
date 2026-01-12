@@ -6,12 +6,16 @@ Le serveur Docusaurus tourne sur le port 3000.
 
 ### URLs à Tester dans Votre Navigateur
 
+✅ **URLs Correctes** (sans les préfixes numériques) :
+
 1. **Page d'accueil** : http://localhost:3000
-2. **Introduction** : http://localhost:3000/docs/introduction/intro
-3. **Vue d'ensemble** : http://localhost:3000/docs/introduction/overview
-4. **Architecture** : http://localhost:3000/docs/introduction/architecture-decision
-5. **Métriques** : http://localhost:3000/docs/introduction/success-metrics
-6. **Stockage** : http://localhost:3000/docs/stockage/strategy
+2. **Vue d'ensemble** : http://localhost:3000/docs/introduction/overview
+3. **Architecture** : http://localhost:3000/docs/introduction/architecture-decision
+4. **Métriques** : http://localhost:3000/docs/introduction/success-metrics
+5. **Stockage** : http://localhost:3000/docs/stockage/strategy
+
+> ⚠️ **Important** : Docusaurus génère les URLs **sans les préfixes numériques** des dossiers.
+> Par exemple : `docs/00-introduction/` → `/docs/introduction/`
 
 ## ✨ Ce qui Fonctionne
 
