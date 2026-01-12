@@ -1,6 +1,6 @@
 {
   "name": "openalex-api-docs",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Documentation de l'API OpenAlex - Université Le Havre Normandie",
   "private": true,
   "scripts": {
