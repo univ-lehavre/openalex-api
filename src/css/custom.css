@@ -1,0 +1,264 @@
+/**
+ * Styles CSS personnalisés pour la documentation API OpenAlex
+ * Thème basé sur les couleurs de l'Université Le Havre Normandie
+ */
+
+/* Variables globales */
+:root {
+  /* Couleurs primaires */
+  --ifm-color-primary: #0066cc;
+  --ifm-color-primary-dark: #005bb8;
+  --ifm-color-primary-darker: #0056ad;
+  --ifm-color-primary-darkest: #00468f;
+  --ifm-color-primary-light: #1a75d1;
+  --ifm-color-primary-lighter: #267ed4;
+  --ifm-color-primary-lightest: #4090da;
+
+  /* Typographie */
+  --ifm-code-font-size: 95%;
+  --ifm-font-family-base: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  --ifm-font-family-monospace: 'Fira Code', 'Courier New', monospace;
+
+  /* Espacement */
+  --ifm-spacing-horizontal: 1rem;
+  --ifm-spacing-vertical: 1rem;
+
+  /* Navbar */
+  --ifm-navbar-height: 60px;
+  --ifm-navbar-background-color: #ffffff;
+  --ifm-navbar-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+  /* Footer */
+  --ifm-footer-background-color: #2c3e50;
+  --ifm-footer-color: #ecf0f1;
+
+  /* Code blocks */
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+}
+
+/* Mode sombre */
+[data-theme='dark'] {
+  --ifm-color-primary: #3399ff;
+  --ifm-color-primary-dark: #1a8cff;
+  --ifm-color-primary-darker: #0d85ff;
+  --ifm-color-primary-darkest: #0070e6;
+  --ifm-color-primary-light: #4da3ff;
+  --ifm-color-primary-lighter: #5cabff;
+  --ifm-color-primary-lightest: #7abdff;
+
+  --ifm-navbar-background-color: #1c1e21;
+  --ifm-footer-background-color: #181a1b;
+
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+}
+
+/* Styles pour les blocs de code */
+.prism-code {
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+/* Amélioration des tableaux */
+table {
+  display: table;
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+}
+
+table thead {
+  background-color: var(--ifm-color-primary-lightest);
+}
+
+[data-theme='dark'] table thead {
+  background-color: var(--ifm-color-primary-darkest);
+}
+
+table th,
+table td {
+  padding: 0.75rem;
+  border: 1px solid var(--ifm-table-border-color);
+}
+
+/* Badges de statut */
+.badge {
+  display: inline-block;
+  padding: 0.25em 0.6em;
+  font-size: 0.75em;
+  font-weight: 700;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+  border-radius: 0.25rem;
+}
+
+.badge-draft {
+  background-color: #ffc107;
+  color: #000;
+}
+
+.badge-review {
+  background-color: #17a2b8;
+  color: #fff;
+}
+
+.badge-approved {
+  background-color: #28a745;
+  color: #fff;
+}
+
+.badge-high {
+  background-color: #dc3545;
+  color: #fff;
+}
+
+.badge-medium {
+  background-color: #fd7e14;
+  color: #fff;
+}
+
+.badge-low {
+  background-color: #6c757d;
+  color: #fff;
+}
+
+/* Amélioration des admonitions */
+.admonition {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  border-left: 4px solid;
+  border-radius: 4px;
+}
+
+.admonition-icon {
+  display: inline-block;
+  margin-right: 0.5rem;
+}
+
+/* Cartes personnalisées */
+.custom-card {
+  background: var(--ifm-card-background-color);
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin: 1rem 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.custom-card h3 {
+  margin-top: 0;
+}
+
+/* Grille responsive */
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin: 1.5rem 0;
+}
+
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+/* Amélioration de la sidebar */
+.theme-doc-sidebar-container {
+  border-right: 1px solid var(--ifm-toc-border-color);
+}
+
+.menu__link {
+  font-size: 0.9rem;
+  padding: 0.4rem 0.75rem;
+}
+
+.menu__link--active {
+  font-weight: 600;
+  background-color: var(--ifm-menu-color-background-active);
+  border-left: 3px solid var(--ifm-color-primary);
+}
+
+/* Amélioration des breadcrumbs */
+.breadcrumbs {
+  font-size: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+/* Styles pour les diagrammes ASCII */
+pre code {
+  font-family: 'Courier New', monospace;
+  line-height: 1.4;
+}
+
+/* Amélioration de la navigation */
+.pagination-nav__link {
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 8px;
+  padding: 1rem;
+  transition: all 0.2s ease;
+}
+
+.pagination-nav__link:hover {
+  border-color: var(--ifm-color-primary);
+  box-shadow: 0 4px 12px rgba(0, 102, 204, 0.15);
+  transform: translateY(-2px);
+}
+
+/* Tags */
+.tag {
+  display: inline-block;
+  background: var(--ifm-color-primary-lightest);
+  color: var(--ifm-color-primary-darkest);
+  padding: 0.2rem 0.6rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  margin: 0.2rem;
+  font-weight: 500;
+}
+
+[data-theme='dark'] .tag {
+  background: var(--ifm-color-primary-darkest);
+  color: var(--ifm-color-primary-lightest);
+}
+
+/* Amélioration du footer */
+.footer__link-item {
+  line-height: 2;
+}
+
+.footer__copyright {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 0.85rem;
+}
+
+/* Responsive */
+@media (max-width: 996px) {
+  .grid-2,
+  .grid-3 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Impression */
+@media print {
+  .navbar,
+  .footer,
+  .theme-doc-sidebar-container,
+  .pagination-nav,
+  .theme-doc-toc-mobile,
+  .theme-doc-breadcrumbs {
+    display: none !important;
+  }
+
+  .main-wrapper {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+}

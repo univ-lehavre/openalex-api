@@ -1,0 +1,17 @@
+.features {
+  display: flex;
+  align-items: center;
+  padding: 2rem 0;
+  width: 100%;
+}
+
+.featureIcon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+@media screen and (max-width: 996px) {
+  .features {
+    padding: 2rem 1rem;
+  }
+}

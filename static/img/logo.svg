@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+  <!-- Logo simple pour API OpenAlex -->
+  <rect width="200" height="200" fill="#0066cc" rx="20"/>
+  <text x="100" y="110" font-family="Arial, sans-serif" font-size="80" font-weight="bold" fill="white" text-anchor="middle">OA</text>
+  <text x="100" y="160" font-family="Arial, sans-serif" font-size="20" fill="white" text-anchor="middle">API</text>
+</svg>
