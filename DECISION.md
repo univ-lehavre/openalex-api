@@ -224,7 +224,7 @@ Les systèmes de bases de données ne sont pas dans CNCF mais sont des standards
 
 - **PostgreSQL** - Standard OLTP open-source
 - **Neo4j** - Leader des bases de données graphes
-- **InfluxDB** - Extension PostgreSQL pour time-series
+- **InfluxDB** - Base de données time-series native avec TSM engine
 - **Elasticsearch** - Standard recherche plein texte
 - **Redis** - Standard cache distribué
 
